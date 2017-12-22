@@ -1,3 +1,4 @@
+pub mod consts;
 pub mod matrix;
 pub mod vector;
 
