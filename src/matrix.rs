@@ -10,7 +10,7 @@ pub use matrix_utilities::*;
 
 macro_rules! matrix_type
 {
-    ($name: ident, $vec: ident, $size: tt) => {
+    ($name: ident, $vec: ident, $smaller_vec: ident, $size: tt) => {
         #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
         pub struct $name<T: Copy>(pub [[T; $size]; $size]);
 
@@ -78,10 +78,10 @@ macro_rules! matrix_type
                 base
             }
 
-            pub fn translation(translation: $vec<T>) -> Self
+            pub fn translation(translation: $smaller_vec<T>) -> Self
             {
                 let mut base = Self::identity();
-                base.0[$size - 1] = translation.0;
+                base.0[$size - 1] = translation.extend(T::one()).0;
                 base
             }
         }
@@ -130,9 +130,9 @@ macro_rules! matrix_type
 }
 
 
-matrix_type!(Mat2, Vec2, 2);
-matrix_type!(Mat3, Vec3, 3);
-matrix_type!(Mat4, Vec4, 4);
+matrix_type!(Mat2, Vec2, Vec1, 2);
+matrix_type!(Mat3, Vec3, Vec2, 3);
+matrix_type!(Mat4, Vec4, Vec3, 4);
 
 
 #[cfg(test)]
@@ -210,7 +210,7 @@ mod tests
     fn translating()
     {
         let v = vec4(0, 0, 0, 1);
-        let m = Mat4::translation(vec4(2, 4, 6, 1));
+        let m = Mat4::translation(vec3(2, 4, 6));
         assert_eq!(m * v, vec4(2, 4, 6, 1));
     }
 }
