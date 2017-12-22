@@ -1,0 +1,6 @@
+[package]
+name = "adequate_math"
+version = "0.1.0"
+authors = ["Pirh"]
+
+[dependencies]
