@@ -8,10 +8,24 @@ pub fn ortho_projection(aspect: f32, size: f32, near: f32, far: f32) -> Mat4<f32
     let inv_height = 1.0 / size;
 
     Mat4([
-         [inv_width, 0.0, 0.0, 0.0],
-         [0.0, inv_height, 0.0, 0.0],
-         [0.0, 0.0, 2.0 / (far - near), 0.0],
-         [0.0, 0.0, -(far + near) / (far - near), 1.0]
+        [inv_width, 0.0, 0.0, 0.0],
+        [0.0, inv_height, 0.0, 0.0],
+        [0.0, 0.0, 2.0 / (far - near), 0.0],
+        [0.0, 0.0, -(far + near) / (far - near), 1.0]
+    ])
+}
+
+
+pub fn perspective_projection(aspect: f32, fov: f32, near: f32, far: f32) -> Mat4<f32>
+{
+    let f = 1.0 / (fov / 2.0).tan();
+    let f_a = f / aspect;
+
+    Mat4([
+        [f_a, 0.0, 0.0, 0.0],
+        [0.0, f, 0.0, 0.0],
+        [0.0, 0.0, (far + near) / (far - near), 1.0],
+        [0.0, 0.0, -(2.0 * far * near) / (far - near), 0.0]
     ])
 }
 
@@ -23,10 +37,10 @@ pub fn axis_rotation(axis: Vec3<f32>, angle: f32) -> Mat4<f32>
     let ic = 1.0 - c;
 
     Mat4([
-         [(c + x * x * ic), (y * x * ic + z * s), (z * x * ic - y * s), 0.0],
-         [(x * y * ic - z * s), (c + y * y * ic), (z * y * ic + x * s), 0.0],
-         [(x * z * ic + y * s), (y * z * ic - x * s), (c + z * z * ic), 0.0],
-         [0.0, 0.0, 0.0, 1.0],
+        [(c + x * x * ic), (y * x * ic + z * s), (z * x * ic - y * s), 0.0],
+        [(x * y * ic - z * s), (c + y * y * ic), (z * y * ic + x * s), 0.0],
+        [(x * z * ic + y * s), (y * z * ic - x * s), (c + z * z * ic), 0.0],
+        [0.0, 0.0, 0.0, 1.0],
     ])
 
 }
@@ -40,10 +54,10 @@ pub fn euler_rotation(angles: Vec3<f32>) -> Mat4<f32>
     let (sz, cz) = z.sin_cos();
 
     Mat4([
-         [cz * cy, sz * cy, -sy, 0.0],
-         [cz * sy * sx - sz * cx, sz * sy * sx + cz * cx, cy * sx, 0.0],
-         [cz * sy * cx + sz * sx, sz * sy * cx - cz * sx, cy * cx, 0.0],
-         [0.0, 0.0, 0.0, 1.0]
+        [cz * cy, sz * cy, -sy, 0.0],
+        [cz * sy * sx - sz * cx, sz * sy * sx + cz * cx, cy * sx, 0.0],
+        [cz * sy * cx + sz * sx, sz * sy * cx - cz * sx, cy * cx, 0.0],
+        [0.0, 0.0, 0.0, 1.0]
     ])
 }
 
@@ -63,6 +77,7 @@ pub fn look_rotation(forward: Vec3<f32>, up: Vec3<f32>) -> Mat4<f32>
 mod tests
 {
     use super::*;
+    use consts::TAU32;
 
     #[test]
     fn orthographic_projection()
@@ -70,6 +85,17 @@ mod tests
         let m = ortho_projection(1.0, 4.0, 0.0, 4.0);
         let p = vec4(4.0, 4.0, 4.0, 1.0);
         assert_eq!(m * p, vec4(1.0, 1.0, 1.0, 1.0));
+    }
+
+    #[test]
+    fn perspective_projection_transformation()
+    {
+        let m = perspective_projection(1.0, TAU32 / 4.0, 1.0, 2.0);
+        let u = vec4(1.0, 1.0, 1.0, 1.0);
+        let v = vec4(2.0, 2.0, 2.0, 1.0);
+
+        assert_eq!(m * u, vec4(1.0, 1.0, -1.0, 1.0));
+        assert_eq!(m * v, vec4(2.0, 2.0, 2.0, 2.0));
     }
 
     #[test]
