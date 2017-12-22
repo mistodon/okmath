@@ -10,7 +10,15 @@ pub use matrix_utilities::*;
 
 macro_rules! matrix_type
 {
-    ($name: ident, $vec: ident, $smaller_vec: ident, $size: tt) => {
+    (
+        $name: ident,
+        $vec: ident,
+        $smaller_vec: ident,
+        $size: tt,
+        [$($index: tt),*],
+        { $($col: tt : [$($row: tt),*]),* },
+        [$([$($id: ident),*]),*]) =>
+    {
         #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
         pub struct $name<T: Copy>(pub [[T; $size]; $size]);
 
@@ -18,14 +26,11 @@ macro_rules! matrix_type
         {
             pub fn row(&self, index: usize) -> $vec<T>
             {
-                let mut result: $vec<T> = unsafe { ::std::mem::uninitialized() };
-
-                for i in 0..$size
-                {
-                    result.0[i] = self.0[i][index];
-                }
-
-                result
+                $vec([
+                    $(
+                        self.0[$index][index]
+                    ),*
+                ])
             }
 
             pub fn col(&self, index: usize) -> $vec<T>
@@ -35,17 +40,11 @@ macro_rules! matrix_type
 
             pub fn transpose(&self) -> Self
             {
-                let mut result: Self = unsafe { ::std::mem::uninitialized() };
-
-                for col in 0..$size
-                {
-                    for row in 0..$size
-                    {
-                        result.0[col][row] = self.0[row][col];
-                    }
-                }
-
-                result
+                $name([
+                    $(
+                        [ $(self.0[$row][$col]),* ]
+                    ),*
+                ])
             }
         }
 
@@ -55,17 +54,11 @@ macro_rules! matrix_type
         {
             pub fn identity() -> Self
             {
-                let mut result: Self = unsafe { ::std::mem::uninitialized() };
-
-                for col in 0..$size
-                {
-                    for row in 0..$size
-                    {
-                        result.0[col][row] = if col == row { T::one() } else { T::zero() };
-                    }
-                }
-
-                result
+                $name([
+                    $(
+                        [ $(T::$id()),* ]
+                    ),*
+                ])
             }
 
             pub fn scale(scale: $vec<T>) -> Self
@@ -94,17 +87,11 @@ macro_rules! matrix_type
 
             fn mul(self, other: Self) -> Self::Output
             {
-                let mut result: Self = unsafe { ::std::mem::uninitialized() };
-
-                for col in 0..$size
-                {
-                    for row in 0..$size
-                    {
-                        result.0[col][row] = self.row(row).dot(other.col(col));
-                    }
-                }
-
-                result
+                $name([
+                    $(
+                        [ $( self.row($row).dot(other.col($col))),* ]
+                    ),*
+                ])
             }
         }
 
@@ -116,23 +103,55 @@ macro_rules! matrix_type
 
             fn mul(self, vector: $vec<T>) -> Self::Output
             {
-                let mut result: Self::Output = unsafe { ::std::mem::uninitialized() };
-
-                for i in 0..$size
-                {
-                    result.0[i] = self.row(i).dot(vector);
-                }
-
-                result
+                $vec([
+                    $(
+                        self.row($index).dot(vector)
+                    ),*
+                ])
             }
         }
     }
 }
 
 
-matrix_type!(Mat2, Vec2, Vec1, 2);
-matrix_type!(Mat3, Vec3, Vec2, 3);
-matrix_type!(Mat4, Vec4, Vec3, 4);
+matrix_type!(Mat2, Vec2, Vec1, 2, [0, 1],
+    {
+        0: [0, 1],
+        1: [0, 1]
+    },
+    [
+        [one, zero],
+        [zero, one]
+    ]
+);
+
+matrix_type!(Mat3, Vec3, Vec2, 3, [0, 1, 2],
+    {
+        0: [0, 1, 2],
+        1: [0, 1, 2],
+        2: [0, 1, 2]
+    },
+    [
+        [one, zero, zero],
+        [zero, one, zero],
+        [zero, zero, one]
+    ]
+);
+
+matrix_type!(Mat4, Vec4, Vec3, 4, [0, 1, 2, 3],
+    {
+        0: [0, 1, 2, 3],
+        1: [0, 1, 2, 3],
+        2: [0, 1, 2, 3],
+        3: [0, 1, 2, 3]
+    },
+    [
+        [one, zero, zero, zero],
+        [zero, one, zero, zero],
+        [zero, zero, one, zero],
+        [zero, zero, zero, one]
+    ]
+);
 
 
 #[cfg(test)]
@@ -143,8 +162,13 @@ mod tests
     #[test]
     fn identity()
     {
-        let m = Mat4([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]);
-        assert_eq!(Mat4::identity(), m);
+        let m2 = Mat2([[1, 0], [0, 1]]);
+        let m3 = Mat3([[1, 0, 0], [0, 1, 0], [0, 0, 1]]);
+        let m4 = Mat4([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]);
+
+        assert_eq!(Mat2::identity(), m2);
+        assert_eq!(Mat3::identity(), m3);
+        assert_eq!(Mat4::identity(), m4);
     }
 
     #[test]
