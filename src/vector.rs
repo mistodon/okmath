@@ -209,10 +209,12 @@ macro_rules! vector_type
 }
 
 
+type Tuple1<T> = (T,);
 type Tuple2<T> = (T, T);
 type Tuple3<T> = (T, T, T);
 type Tuple4<T> = (T, T, T, T);
 
+vector_type!(Vec1, 1, Tuple1);
 vector_type!(Vec2, 2, Tuple2);
 vector_type!(Vec3, 3, Tuple3);
 vector_type!(Vec4, 4, Tuple4);
@@ -231,6 +233,22 @@ where
              az * bx - ax * bz,
              ax * by - ay * bx])
     }
+}
+
+
+impl<T: Copy> Vec1<T>
+{
+    pub fn extend(&self, y: T) -> Vec2<T> { let (x,) = self.as_tuple(); Vec2([x, y]) }
+}
+
+impl<T: Copy> Vec2<T>
+{
+    pub fn extend(&self, z: T) -> Vec3<T> { let (x, y) = self.as_tuple(); Vec3([x, y, z]) }
+}
+
+impl<T: Copy> Vec3<T>
+{
+    pub fn extend(&self, w: T) -> Vec4<T> { let (x, y, z) = self.as_tuple(); Vec4([x, y, z, w]) }
 }
 
 
@@ -419,6 +437,16 @@ mod tests
         assert_eq!(z.cross(y), -x);
         assert_eq!(z.cross(x), y);
         assert_eq!(x.cross(z), -y);
+    }
+
+    #[test]
+    fn extending_vectors()
+    {
+        let u = vec3(1, 3, 5);
+        let v = vec2(2, 4);
+
+        assert_eq!(u.extend(7), vec4(1, 3, 5, 7));
+        assert_eq!(v.extend(6), vec3(2, 4, 6));
     }
 }
 

@@ -5,6 +5,14 @@ pub trait AsTuple
     fn as_tuple(&self) -> Self::Tuple;
 }
 
+
+impl<T: Copy> AsTuple for [T; 1]
+{
+    type Tuple = (T,);
+
+    fn as_tuple(&self) -> Self::Tuple { (self[0],) }
+}
+
 impl<T: Copy> AsTuple for [T; 2]
 {
     type Tuple = (T, T);
