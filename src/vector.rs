@@ -7,7 +7,7 @@ use as_tuple::AsTuple;
 
 macro_rules! vector_type
 {
-    ($name: ident, $size: tt, $tuple: ident) => {
+    ($name: ident, $size: tt, $tuple: ident, [$($index: tt),*]) => {
         #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
         pub struct $name<T: Copy>(pub [T; $size]);
 
@@ -20,12 +20,11 @@ macro_rules! vector_type
                 U: Copy,
                 F: Fn(T) -> U
             {
-                let mut result: $name<U> = unsafe { ::std::mem::uninitialized() };
-                for i in 0..$size
-                {
-                    result.0[i] = operator(self.0[i]);
-                }
-                result
+                $name([
+                    $(
+                        operator(self.0[$index])
+                    ),*
+                ])
             }
 
             #[inline(always)]
@@ -35,12 +34,11 @@ macro_rules! vector_type
                 V: Copy,
                 F: Fn(T, U) -> V
             {
-                let mut result: $name<V> = unsafe { ::std::mem::uninitialized() };
-                for i in 0..$size
-                {
-                    result.0[i] = operator(self.0[i], other.0[i]);
-                }
-                result
+                $name([
+                    $(
+                        operator(self.0[$index], other.0[$index])
+                    ),*
+                ])
             }
 
             #[inline(always)]
@@ -214,10 +212,10 @@ type Tuple2<T> = (T, T);
 type Tuple3<T> = (T, T, T);
 type Tuple4<T> = (T, T, T, T);
 
-vector_type!(Vec1, 1, Tuple1);
-vector_type!(Vec2, 2, Tuple2);
-vector_type!(Vec3, 3, Tuple3);
-vector_type!(Vec4, 4, Tuple4);
+vector_type!(Vec1, 1, Tuple1, [0]);
+vector_type!(Vec2, 2, Tuple2, [0, 1]);
+vector_type!(Vec3, 3, Tuple3, [0, 1, 2]);
+vector_type!(Vec4, 4, Tuple4, [0, 1, 2, 3]);
 
 
 impl<T: Copy> Vec3<T>
