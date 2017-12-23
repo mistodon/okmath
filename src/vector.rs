@@ -194,14 +194,24 @@ macro_rules! vector_type
         {
             pub fn mag(&self) -> f32 { self.mag_sq().sqrt() }
 
-            pub fn norm(&self) -> Self { *self / self.mag() }
+            pub fn norm(&self) -> Self
+            {
+                let mag = self.mag();
+                assert!(mag != 0.0, "attempt to normalize zero vector");
+                *self / mag
+            }
         }
 
         impl $name<f64>
         {
             pub fn mag(&self) -> f64 { self.mag_sq().sqrt() }
 
-            pub fn norm(&self) -> Self { *self / self.mag() }
+            pub fn norm(&self) -> Self
+            {
+                let mag = self.mag();
+                assert!(mag != 0.0, "attempt to normalize zero vector");
+                *self / mag
+            }
         }
     }
 }
@@ -428,6 +438,14 @@ mod tests
     {
         let v = vec4(10.0, 0.0, 0.0, 0.0_f32);
         assert_eq!(v.norm(), vec4(1.0, 0.0, 0.0, 0.0));
+    }
+
+    #[test]
+//     #[should_panic]
+    fn normalizing_zero_vector()
+    {
+        let z = vec4(0.0, 0.0, 0.0, 0.0_f32);
+        let _y = z.norm();
     }
 
     #[test]
