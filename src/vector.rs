@@ -242,11 +242,18 @@ impl<T: Copy> Vec1<T>
 impl<T: Copy> Vec2<T>
 {
     pub fn extend(&self, z: T) -> Vec3<T> { let (x, y) = self.as_tuple(); Vec3([x, y, z]) }
+    pub fn retract(&self) -> Vec1<T> { let (x, _) = self.as_tuple(); Vec1([x]) }
 }
 
 impl<T: Copy> Vec3<T>
 {
     pub fn extend(&self, w: T) -> Vec4<T> { let (x, y, z) = self.as_tuple(); Vec4([x, y, z, w]) }
+    pub fn retract(&self) -> Vec2<T> { let (x, y, _) = self.as_tuple(); Vec2([x, y]) }
+}
+
+impl<T: Copy> Vec4<T>
+{
+    pub fn retract(&self) -> Vec3<T> { let (x, y, z, _) = self.as_tuple(); Vec3([x, y, z]) }
 }
 
 
@@ -445,6 +452,16 @@ mod tests
 
         assert_eq!(u.extend(7), vec4(1, 3, 5, 7));
         assert_eq!(v.extend(6), vec3(2, 4, 6));
+    }
+
+    #[test]
+    fn retracting_vectors()
+    {
+        let u = vec3(1, 3, 5);
+        let v = vec4(2, 4, 6, 8);
+
+        assert_eq!(u.retract(), vec2(1, 3));
+        assert_eq!(v.retract(), vec3(2, 4, 6));
     }
 }
 
