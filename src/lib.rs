@@ -1,4 +1,5 @@
 pub mod consts;
+pub mod math;
 pub mod matrix;
 pub mod vector;
 
