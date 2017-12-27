@@ -441,7 +441,7 @@ mod tests
     }
 
     #[test]
-//     #[should_panic]
+    #[should_panic]
     fn normalizing_zero_vector()
     {
         let z = vec4(0.0, 0.0, 0.0, 0.0_f32);
