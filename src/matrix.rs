@@ -153,6 +153,73 @@ matrix_type!(Mat4, Vec4, Vec3, 4, [0, 1, 2, 3],
     ]
 );
 
+impl<T> Mat2<T>
+where
+    T: Copy + Primitive
+{
+    pub fn extend(&self) -> Mat3<T>
+    {
+        let mut m = Mat3::identity();
+        for col in 0..2
+        {
+            for row in 0..2
+            {
+                m.0[col][row] = self.0[col][row];
+            }
+        }
+        m
+    }
+}
+
+impl<T> Mat3<T>
+where
+    T: Copy + Primitive
+{
+    pub fn extend(&self) -> Mat4<T>
+    {
+        let mut m = Mat4::identity();
+        for col in 0..3
+        {
+            for row in 0..3
+            {
+                m.0[col][row] = self.0[col][row];
+            }
+        }
+        m
+    }
+
+    pub fn retract(&self) -> Mat2<T>
+    {
+        let mut m = Mat2::identity();
+        for col in 0..2
+        {
+            for row in 0..2
+            {
+                m.0[col][row] = self.0[col][row];
+            }
+        }
+        m
+    }
+}
+
+impl<T> Mat4<T>
+where
+    T: Copy + Primitive
+{
+    pub fn retract(&self) -> Mat3<T>
+    {
+        let mut m = Mat3::identity();
+        for col in 0..3
+        {
+            for row in 0..3
+            {
+                m.0[col][row] = self.0[col][row];
+            }
+        }
+        m
+    }
+}
+
 
 #[cfg(test)]
 mod tests
@@ -236,6 +303,21 @@ mod tests
         let v = vec4(0, 0, 0, 1);
         let m = Mat4::translation(vec3(2, 4, 6));
         assert_eq!(m * v, vec4(2, 4, 6, 1));
+    }
+
+    #[test]
+    fn extending_and_retracting()
+    {
+        let m2 = Mat2([[1, 2], [5, 6]]);
+        let m3 = Mat3([[1, 2, 3], [5, 6, 7], [9, 10, 11]]);
+        let m4 = Mat4([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16]]);
+        let e3 = Mat3([[1, 2, 0], [5, 6, 0], [0, 0, 1]]);
+        let e4 = Mat4([[1, 2, 3, 0], [5, 6, 7, 0], [9, 10, 11, 0], [0, 0, 0, 1]]);
+
+        assert_eq!(m4.retract(), m3);
+        assert_eq!(m3.retract(), m2);
+        assert_eq!(m2.extend(), e3);
+        assert_eq!(m3.extend(), e4);
     }
 }
 
