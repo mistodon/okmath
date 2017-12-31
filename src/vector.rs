@@ -14,6 +14,12 @@ macro_rules! vector_type
 
         impl<T: Copy> $name<T>
         {
+            pub fn from_slice(slice: &[T]) -> Self
+            {
+                assert!(slice.len() >= $size);
+                $name([ $( slice[$index]),* ])
+            }
+
             #[inline(always)]
             pub fn map<F, U>(&self, operator: F) -> $name<U>
             where
@@ -480,6 +486,26 @@ mod tests
 
         assert_eq!(u.retract(), vec2(1, 3));
         assert_eq!(v.retract(), vec3(2, 4, 6));
+    }
+
+    #[test]
+    fn from_slice_correct()
+    {
+        let s = &[1, 2, 3, 4, 5, 6];
+        let v2 = Vec2::from_slice(s);
+        let v3 = Vec3::from_slice(s);
+        let v4 = Vec4::from_slice(s);
+        assert_eq!(v2, vec2(1, 2));
+        assert_eq!(v3, vec3(1, 2, 3));
+        assert_eq!(v4, vec4(1, 2, 3, 4));
+    }
+
+    #[test]
+    #[should_panic]
+    fn from_slice_fail()
+    {
+        let s = &[1, 2, 3];
+        let _v4 = Vec4::from_slice(s);
     }
 }
 
