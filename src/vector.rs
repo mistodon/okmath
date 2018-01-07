@@ -1,8 +1,9 @@
 use std::iter::Sum;
 use std::ops::*;
 
-use primitive::Primitive;
 use as_tuple::AsTuple;
+use float::Float;
+use primitive::Primitive;
 
 
 macro_rules! vector_type
@@ -196,26 +197,14 @@ macro_rules! vector_type
             pub fn proj(&self, other: Self) -> Self { other * (self.dot(other) / other.dot(other)) }
         }
 
-        impl $name<f32>
+        impl<T: Float> $name<T>
         {
-            pub fn mag(&self) -> f32 { self.mag_sq().sqrt() }
+            pub fn mag(&self) -> T { self.mag_sq().sqrt() }
 
             pub fn norm(&self) -> Self
             {
                 let mag = self.mag();
-                assert!(mag != 0.0, "attempt to normalize zero vector");
-                *self / mag
-            }
-        }
-
-        impl $name<f64>
-        {
-            pub fn mag(&self) -> f64 { self.mag_sq().sqrt() }
-
-            pub fn norm(&self) -> Self
-            {
-                let mag = self.mag();
-                assert!(mag != 0.0, "attempt to normalize zero vector");
+                assert!(mag != T::zero(), "attempt to normalize zero vector");
                 *self / mag
             }
         }
