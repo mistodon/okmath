@@ -10,6 +10,8 @@ pub trait Float: 'static + Send + Sync + Copy + PartialEq + PartialOrd + Primiti
     fn sin(self) -> Self;
     fn cos(self) -> Self;
     fn sin_cos(self) -> (Self, Self);
+    fn asin(self) -> Self;
+    fn acos(self) -> Self;
 }
 
 impl Float for f32
@@ -18,6 +20,8 @@ impl Float for f32
     fn sin(self) -> Self { self.sin() }
     fn cos(self) -> Self { self.cos() }
     fn sin_cos(self) -> (Self, Self) { self.sin_cos() }
+    fn asin(self) -> Self { self.asin() }
+    fn acos(self) -> Self { self.acos() }
 }
 
 impl Float for f64
@@ -26,4 +30,6 @@ impl Float for f64
     fn sin(self) -> Self { self.sin() }
     fn cos(self) -> Self { self.cos() }
     fn sin_cos(self) -> (Self, Self) { self.sin_cos() }
+    fn asin(self) -> Self { self.asin() }
+    fn acos(self) -> Self { self.acos() }
 }

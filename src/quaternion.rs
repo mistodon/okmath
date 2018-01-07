@@ -29,6 +29,18 @@ where
     }
 }
 
+impl<T> Add for Quaternion<T>
+where
+    T: Copy + Add<Output=T>
+{
+    type Output = Self;
+
+    fn add(self, other: Self) -> Self::Output
+    {
+        Quaternion(self.0 + other.0, self.1 + other.1)
+    }
+}
+
 impl<T> Mul for Quaternion<T>
 where
     T: Copy + Add<Output=T> + Sub<Output=T> + Mul<Output=T> + Sum<T>
@@ -56,6 +68,18 @@ where
     }
 }
 
+impl<T> Mul<T> for Quaternion<T>
+where
+    T: Copy + Mul<Output=T>
+{
+    type Output = Self;
+
+    fn mul(self, constant: T) -> Self::Output
+    {
+        Quaternion(self.0 * constant, self.1 * constant)
+    }
+}
+
 impl<T> Quaternion<T>
 where
     T: Copy + Add<Output=T> + Mul<Output=T> + Sum<T>
@@ -65,7 +89,7 @@ where
     pub fn mag_sq(&self) -> T { self.dot(*self) }
 }
 
-impl<T: Float> Quaternion<T>
+impl<T: Float + ::std::fmt::Debug> Quaternion<T>
 {
     pub fn mag(&self) -> T { self.mag_sq().sqrt() }
 
@@ -97,6 +121,14 @@ impl<T: Float> Quaternion<T>
                 cx * sy * cz + sx * cy * sz,
                 cx * cy * sz + sx * sy * cz,
             ))
+    }
+
+    pub fn slerp(&self, other: Self, t: T) -> Self
+    {
+        let it = T::one() - t;
+        let a = (self.dot(other) / (self.mag() * other.mag())).acos();
+        let sina = a.sin();
+        *self * ((it*a).sin() / sina) + other * ((t*a).sin() / sina)
     }
 }
 
@@ -243,5 +275,16 @@ mod tests
         assert_vec_eq!(qx * vy, vz);
         assert_vec_eq!(qy * vz, vx);
         assert_vec_eq!(qz * vx, vy);
+    }
+
+    #[test]
+    fn slerp()
+    {
+        let q0 = Quaternion::euler_angles(0.0, 0.0, 0.0);
+        let q1 = Quaternion::euler_angles(TAU32 / 4.0, 0.0, 0.0);
+        let q = Quaternion::euler_angles(TAU32 / 8.0, 0.0, 0.0);
+        assert_quat_eq!(q0.slerp(q1, 0.0), q0);
+        assert_quat_eq!(q0.slerp(q1, 0.5), q);
+        assert_quat_eq!(q0.slerp(q1, 1.0), q1);
     }
 }
