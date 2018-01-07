@@ -126,9 +126,13 @@ impl<T: Float + ::std::fmt::Debug> Quaternion<T>
     pub fn slerp(&self, other: Self, t: T) -> Self
     {
         let it = T::one() - t;
-        let a = (self.dot(other) / (self.mag() * other.mag())).acos();
+        let mags = self.mag() * other.mag();
+        assert!(mags != T::zero());
+
+        let dot_mags = self.dot(other) / mags;
+        let a = dot_mags.min(T::one()).max(-T::one()).acos();
         let sina = a.sin();
-        *self * ((it*a).sin() / sina) + other * ((t*a).sin() / sina)
+        if sina == T::zero() { *self } else { *self * ((it*a).sin() / sina) + other * ((t*a).sin() / sina) }
     }
 }
 
@@ -286,5 +290,14 @@ mod tests
         assert_quat_eq!(q0.slerp(q1, 0.0), q0);
         assert_quat_eq!(q0.slerp(q1, 0.5), q);
         assert_quat_eq!(q0.slerp(q1, 1.0), q1);
+    }
+
+    #[test]
+    fn slerp_to_self()
+    {
+        let q0 = Quaternion::identity();
+        assert_quat_eq!(q0.slerp(q0, 0.0), q0);
+        assert_quat_eq!(q0.slerp(q0, 0.5), q0);
+        assert_quat_eq!(q0.slerp(q0, 1.0), q0);
     }
 }
