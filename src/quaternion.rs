@@ -7,7 +7,8 @@ use matrix::{ Mat3, Mat4 };
 use vector::{ Vec3, vec3 };
 
 
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde_support", derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize))]
+#[cfg_attr(not(feature = "serde_support"), derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash))]
 pub struct Quaternion<T: Copy>(pub T, pub Vec3<T>);
 
 

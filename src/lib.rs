@@ -1,3 +1,12 @@
+#![cfg_attr(feature = "cargo-clippy", allow(many_single_char_names))]
+
+#[cfg(feature = "serde_support")]
+#[macro_use]
+extern crate serde_derive;
+
+#[cfg(feature = "serde_support")]
+extern crate serde;
+
 #[cfg(test)]
 #[macro_use]
 mod test_helpers;

@@ -19,7 +19,8 @@ macro_rules! matrix_type
         { $($col: tt : [$($row: tt),*]),* },
         [$([$($id: ident),*]),*]) =>
     {
-        #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
+        #[cfg_attr(feature = "serde_support", derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize))]
+        #[cfg_attr(not(feature = "serde_support"), derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash))]
         pub struct $name<T: Copy>(pub [[T; $size]; $size]);
 
         impl<T: Copy> $name<T>
@@ -61,6 +62,8 @@ macro_rules! matrix_type
                 ])
             }
 
+            // TODO(claire): Report bug to clippy? This can't be a memcpy.
+            #[cfg_attr(feature = "cargo-clippy", allow(manual_memcpy))]
             pub fn scale(scale: $vec<T>) -> Self
             {
                 let mut base = Self::identity();
@@ -162,10 +165,7 @@ where
         let mut m = Mat3::identity();
         for col in 0..2
         {
-            for row in 0..2
-            {
-                m.0[col][row] = self.0[col][row];
-            }
+            m.0[col][..2].clone_from_slice(&self.0[col][..2]);
         }
         m
     }
@@ -180,10 +180,7 @@ where
         let mut m = Mat4::identity();
         for col in 0..3
         {
-            for row in 0..3
-            {
-                m.0[col][row] = self.0[col][row];
-            }
+            m.0[col][..3].clone_from_slice(&self.0[col][..3]);
         }
         m
     }
@@ -193,10 +190,7 @@ where
         let mut m = Mat2::identity();
         for col in 0..2
         {
-            for row in 0..2
-            {
-                m.0[col][row] = self.0[col][row];
-            }
+            m.0[col][..2].clone_from_slice(&self.0[col][..2]);
         }
         m
     }
@@ -211,10 +205,7 @@ where
         let mut m = Mat3::identity();
         for col in 0..3
         {
-            for row in 0..3
-            {
-                m.0[col][row] = self.0[col][row];
-            }
+            m.0[col][..3].clone_from_slice(&self.0[col][..3]);
         }
         m
     }

@@ -9,7 +9,8 @@ use primitive::Primitive;
 macro_rules! vector_type
 {
     ($name: ident, $size: tt, $tuple: ident, [$($index: tt),*]) => {
-        #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
+        #[cfg_attr(feature = "serde_support", derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize))]
+        #[cfg_attr(not(feature = "serde_support"), derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash))]
         pub struct $name<T: Copy>(pub [T; $size]);
 
 
