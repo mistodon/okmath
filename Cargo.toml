@@ -1,6 +1,16 @@
 [package]
 name = "adequate_math"
 version = "0.1.0"
-authors = ["Pirh"]
+authors = ["***Realname*** ***Lastname*** <***redacted.email@redacted.nope***>"]
 
-[dependencies]
+[dependencies.serde]
+version = "~1.0.37"
+optional = true
+
+[dependencies.serde_derive]
+version = "~1.0.37"
+optional = true
+
+[features]
+default = []
+serde_support = ["serde", "serde_derive"]
