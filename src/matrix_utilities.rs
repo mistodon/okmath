@@ -66,7 +66,7 @@ pub fn look_rotation(forward: Vec3<f32>, up: Vec3<f32>) -> Mat4<f32>
 {
     let forward = forward.norm();
     let up = up.norm();
-    let right = up.cross(forward);
+    let right = up.cross(forward).norm();
     let up = forward.cross(right);
 
     Mat4([right.extend(0.0).0, up.extend(0.0).0, forward.extend(0.0).0, [0.0, 0.0, 0.0, 1.0]])
@@ -149,6 +149,26 @@ mod tests
         assert_eq!(mx, vec4(0.0, 0.0, -1.0, 1.0));
         assert_eq!(my, vec4(0.0, 1.0, 0.0, 1.0));
         assert_eq!(mz, vec4(1.0, 0.0, 0.0, 1.0));
+    }
+
+    #[test]
+    fn look_rotation_correctly_normalized()
+    {
+        let m = look_rotation(vec3(0.0, -1.0, 2.0), vec3(0.0, 1.0, 0.0));
+
+        let x = vec4(1.0, 0.0, 0.0, 1.0);
+        let y = vec4(0.0, 1.0, 0.0, 1.0);
+        let z = vec4(0.0, 0.0, 1.0, 1.0);
+
+        let dx = (m * x).retract().mag();
+        let dy = (m * y).retract().mag();
+        let dz = (m * z).retract().mag();
+
+        println!("{} {} {}", dx, dy, dz);
+
+        assert!((1.0 - dx).abs() < 0.01);
+        assert!((1.0 - dy).abs() < 0.01);
+        assert!((1.0 - dz).abs() < 0.01);
     }
 }
 
