@@ -101,15 +101,16 @@ impl<T: Float + ::std::fmt::Debug> Quaternion<T>
         Quaternion(self.0 / mag, self.1 / mag)
     }
 
-    pub fn axis_angle(axis: Vec3<T>, angle: T) -> Self
+    pub fn axis_rotation(axis: [T; 3], angle: T) -> Self
     {
         let a = angle / (T::one() + T::one());
         let (s, c) = a.sin_cos();
-        Quaternion(c, axis * s)
+        Quaternion(c, Vec3(axis) * s)
     }
 
-    pub fn euler_angles(x: T, y: T, z: T) -> Self
+    pub fn euler_rotation(angles: [T; 3]) -> Self
     {
+        let [x, y, z] = angles;
         let two = T::one() + T::one();
         let (sx, cx) = (x / two).sin_cos();
         let (sy, cy) = (y / two).sin_cos();
@@ -223,9 +224,9 @@ mod tests
     fn zero_rotation_is_identity()
     {
         let id = Quaternion::identity();
-        let x = Quaternion::axis_angle(vec3(1.0, 0.0, 0.0), 0.0_f32);
-        let y = Quaternion::axis_angle(vec3(0.0, 1.0, 0.0), 0.0_f32);
-        let z = Quaternion::axis_angle(vec3(0.0, 0.0, 1.0), 0.0_f32);
+        let x = Quaternion::axis_rotation([1.0, 0.0, 0.0], 0.0_f32);
+        let y = Quaternion::axis_rotation([0.0, 1.0, 0.0], 0.0_f32);
+        let z = Quaternion::axis_rotation([0.0, 0.0, 1.0], 0.0_f32);
         assert_eq!(x, id);
         assert_eq!(y, id);
         assert_eq!(z, id);
@@ -237,9 +238,9 @@ mod tests
         let a4 = TAU32;
         let a = a4 / 4.0;
         let a2 = a4 / 2.0;
-        let q = Quaternion::axis_angle(vec3(1.0, 0.0, 0.0), a);
-        let q2 = Quaternion::axis_angle(vec3(1.0, 0.0, 0.0), a2);
-        let q4 = Quaternion::axis_angle(vec3(1.0, 0.0, 0.0), a4);
+        let q = Quaternion::axis_rotation([1.0, 0.0, 0.0], a);
+        let q2 = Quaternion::axis_rotation([1.0, 0.0, 0.0], a2);
+        let q4 = Quaternion::axis_rotation([1.0, 0.0, 0.0], a4);
         assert_quat_eq!(q*q, q2);
         assert_quat_eq!(q2*q2, q4);
         assert_quat_eq!(q*q*q*q, q4);
@@ -249,10 +250,10 @@ mod tests
     fn quaternion_vector_multiplication()
     {
         let v = vec3(1.0, 0.0, 0.0);
-        let q = Quaternion::axis_angle(vec3(0.0, 0.0, 1.0), TAU32 / 4.0);
+        let q = Quaternion::axis_rotation([0.0, 0.0, 1.0], TAU32 / 4.0);
         assert_vec_eq!(q * v, vec3(0.0, 1.0, 0.0));
 
-        let q4 = Quaternion::axis_angle(vec3(0.0, 0.0, 1.0), TAU32);
+        let q4 = Quaternion::axis_rotation([0.0, 0.0, 1.0], TAU32);
         assert_vec_eq!(q4*v, v);
     }
 
@@ -261,8 +262,8 @@ mod tests
     {
         use matrix;
 
-        let q = Quaternion::axis_angle(vec3(0.0, 1.0, 0.0), TAU32 / 4.0);
-        let m = matrix::axis_rotation(vec3(0.0, 1.0, 0.0), TAU32 / 4.0);
+        let q = Quaternion::axis_rotation([0.0, 1.0, 0.0], TAU32 / 4.0);
+        let m = matrix::axis_rotation([0.0, 1.0, 0.0], TAU32 / 4.0);
         let qm = Mat4::from(q);
 
         assert_mat_eq!(m, qm);
@@ -271,9 +272,9 @@ mod tests
     #[test]
     fn euler_rotation()
     {
-        let qx = Quaternion::euler_angles(TAU32 / 4.0, 0.0, 0.0);
-        let qy = Quaternion::euler_angles(0.0, TAU32 / 4.0, 0.0);
-        let qz = Quaternion::euler_angles(0.0, 0.0, TAU32 / 4.0);
+        let qx = Quaternion::euler_rotation([TAU32 / 4.0, 0.0, 0.0]);
+        let qy = Quaternion::euler_rotation([0.0, TAU32 / 4.0, 0.0]);
+        let qz = Quaternion::euler_rotation([0.0, 0.0, TAU32 / 4.0]);
         let vx = vec3(1.0, 0.0, 0.0);
         let vy = vec3(0.0, 1.0, 0.0);
         let vz = vec3(0.0, 0.0, 1.0);
@@ -285,9 +286,9 @@ mod tests
     #[test]
     fn slerp()
     {
-        let q0 = Quaternion::euler_angles(0.0, 0.0, 0.0);
-        let q1 = Quaternion::euler_angles(TAU32 / 4.0, 0.0, 0.0);
-        let q = Quaternion::euler_angles(TAU32 / 8.0, 0.0, 0.0);
+        let q0 = Quaternion::euler_rotation([0.0, 0.0, 0.0]);
+        let q1 = Quaternion::euler_rotation([TAU32 / 4.0, 0.0, 0.0]);
+        let q = Quaternion::euler_rotation([TAU32 / 8.0, 0.0, 0.0]);
         assert_quat_eq!(q0.slerp(q1, 0.0), q0);
         assert_quat_eq!(q0.slerp(q1, 0.5), q);
         assert_quat_eq!(q0.slerp(q1, 1.0), q1);

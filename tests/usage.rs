@@ -46,7 +46,7 @@ fn matrix_transformations()
     let a = Mat4::identity();
     let b = Mat4::scale([2.0, 3.0, 4.0, 1.0]);
     let c = Mat4::translation([1.0, 1.0, 1.0]);
-    let d = matrix::euler_rotation(vec3(0.0, angle, 0.0));
+    let d = matrix::euler_rotation([0.0, angle, 0.0]);
 
     let m = d * c * b * a;
 

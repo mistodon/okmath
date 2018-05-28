@@ -30,9 +30,9 @@ pub fn perspective_projection(aspect: f32, fov: f32, near: f32, far: f32) -> Mat
 }
 
 
-pub fn axis_rotation(axis: Vec3<f32>, angle: f32) -> Mat4<f32>
+pub fn axis_rotation(axis: [f32; 3], angle: f32) -> Mat4<f32>
 {
-    let (x, y, z) = axis.norm().as_tuple();
+    let (x, y, z) = Vec3(axis).norm().as_tuple();
     let (s, c) = angle.sin_cos();
     let ic = 1.0 - c;
 
@@ -46,9 +46,9 @@ pub fn axis_rotation(axis: Vec3<f32>, angle: f32) -> Mat4<f32>
 }
 
 
-pub fn euler_rotation(angles: Vec3<f32>) -> Mat4<f32>
+pub fn euler_rotation(angles: [f32; 3]) -> Mat4<f32>
 {
-    let (x, y, z) = angles.as_tuple();
+    let (x, y, z) = Vec3(angles).as_tuple();
     let (sx, cx) = x.sin_cos();
     let (sy, cy) = y.sin_cos();
     let (sz, cz) = z.sin_cos();
@@ -62,10 +62,10 @@ pub fn euler_rotation(angles: Vec3<f32>) -> Mat4<f32>
 }
 
 
-pub fn look_rotation(forward: Vec3<f32>, up: Vec3<f32>) -> Mat4<f32>
+pub fn look_rotation(forward: [f32; 3], up: [f32; 3]) -> Mat4<f32>
 {
-    let forward = forward.norm();
-    let up = up.norm();
+    let forward = Vec3(forward).norm();
+    let up = Vec3(up).norm();
     let right = up.cross(forward).norm();
     let up = forward.cross(right);
 
@@ -101,7 +101,7 @@ mod tests
     #[test]
     fn rotation_around_axis()
     {
-        let m = axis_rotation(vec3(0.0, 1.0, 0.0), ::std::f32::consts::PI / 2.0);
+        let m = axis_rotation([0.0, 1.0, 0.0], ::std::f32::consts::PI / 2.0);
         let x = vec4(1.0, 0.0, 0.0, 1.0);
         let y = vec4(0.0, 1.0, 0.0, 1.0);
         let z = vec4(0.0, 0.0, 1.0, 1.0);
@@ -120,9 +120,9 @@ mod tests
 
         let u = vec4(1.0, 0.0, 0.0, 1.0);
 
-        let mx = euler_rotation(vec3(  a, 0.0, 0.0));
-        let my = euler_rotation(vec3(0.0,   a, 0.0));
-        let mz = euler_rotation(vec3(0.0, 0.0,   a));
+        let mx = euler_rotation([  a, 0.0, 0.0]);
+        let my = euler_rotation([0.0,   a, 0.0]);
+        let mz = euler_rotation([0.0, 0.0,   a]);
 
         let ux = (mx * u).map(f32::round);
         let uy = (my * u).map(f32::round);
@@ -136,7 +136,7 @@ mod tests
     #[test]
     fn look_at_rotation()
     {
-        let m = look_rotation(vec3(1.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0));
+        let m = look_rotation([1.0, 0.0, 0.0], [0.0, 1.0, 0.0]);
 
         let x = vec4(1.0, 0.0, 0.0, 1.0);
         let y = vec4(0.0, 1.0, 0.0, 1.0);
@@ -154,7 +154,7 @@ mod tests
     #[test]
     fn look_rotation_correctly_normalized()
     {
-        let m = look_rotation(vec3(0.0, -1.0, 2.0), vec3(0.0, 1.0, 0.0));
+        let m = look_rotation([0.0, -1.0, 2.0], [0.0, 1.0, 0.0]);
 
         let x = vec4(1.0, 0.0, 0.0, 1.0);
         let y = vec4(0.0, 1.0, 0.0, 1.0);
