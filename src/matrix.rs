@@ -15,6 +15,7 @@ macro_rules! matrix_type
         $vec: ident,
         $smaller_vec: ident,
         $size: tt,
+        $smaller_size: tt,
         [$($index: tt),*],
         { $($col: tt : [$($row: tt),*]),* },
         [$([$($id: ident),*]),*]) =>
@@ -64,20 +65,20 @@ macro_rules! matrix_type
 
             // TODO(***realname***): Report bug to clippy? This can't be a memcpy.
             #[cfg_attr(feature = "cargo-clippy", allow(manual_memcpy))]
-            pub fn scale(scale: $vec<T>) -> Self
+            pub fn scale(scale: [T; $size]) -> Self
             {
                 let mut base = Self::identity();
                 for i in 0..$size
                 {
-                    base.0[i][i] = scale.0[i];
+                    base.0[i][i] = scale[i];
                 }
                 base
             }
 
-            pub fn translation(translation: $smaller_vec<T>) -> Self
+            pub fn translation(translation: [T; $smaller_size]) -> Self
             {
                 let mut base = Self::identity();
-                base.0[$size - 1] = translation.extend(T::one()).0;
+                base.0[$size - 1] = $smaller_vec(translation).extend(T::one()).0;
                 base
             }
         }
@@ -117,7 +118,7 @@ macro_rules! matrix_type
 }
 
 
-matrix_type!(Mat2, Vec2, Vec1, 2, [0, 1],
+matrix_type!(Mat2, Vec2, Vec1, 2, 1, [0, 1],
     {
         0: [0, 1],
         1: [0, 1]
@@ -128,7 +129,7 @@ matrix_type!(Mat2, Vec2, Vec1, 2, [0, 1],
     ]
 );
 
-matrix_type!(Mat3, Vec3, Vec2, 3, [0, 1, 2],
+matrix_type!(Mat3, Vec3, Vec2, 3, 2, [0, 1, 2],
     {
         0: [0, 1, 2],
         1: [0, 1, 2],
@@ -141,7 +142,7 @@ matrix_type!(Mat3, Vec3, Vec2, 3, [0, 1, 2],
     ]
 );
 
-matrix_type!(Mat4, Vec4, Vec3, 4, [0, 1, 2, 3],
+matrix_type!(Mat4, Vec4, Vec3, 4, 3, [0, 1, 2, 3],
     {
         0: [0, 1, 2, 3],
         1: [0, 1, 2, 3],
@@ -284,7 +285,7 @@ mod tests
     fn scaling()
     {
         let v = vec4(1, 2, 3, 4);
-        let m = Mat4::scale(vec4(4, 3, 2, 1));
+        let m = Mat4::scale([4, 3, 2, 1]);
         assert_eq!(m * v, vec4(4, 6, 6, 4));
     }
 
@@ -292,7 +293,7 @@ mod tests
     fn translating()
     {
         let v = vec4(0, 0, 0, 1);
-        let m = Mat4::translation(vec3(2, 4, 6));
+        let m = Mat4::translation([2, 4, 6]);
         assert_eq!(m * v, vec4(2, 4, 6, 1));
     }
 

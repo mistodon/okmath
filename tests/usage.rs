@@ -44,8 +44,8 @@ fn matrix_transformations()
 {
     let angle = ::std::f32::consts::PI / 2.0;
     let a = Mat4::identity();
-    let b = Mat4::scale(vec4(2.0, 3.0, 4.0, 1.0));
-    let c = Mat4::translation(vec3(1.0, 1.0, 1.0));
+    let b = Mat4::scale([2.0, 3.0, 4.0, 1.0]);
+    let c = Mat4::translation([1.0, 1.0, 1.0]);
     let d = matrix::euler_rotation(vec3(0.0, angle, 0.0));
 
     let m = d * c * b * a;
