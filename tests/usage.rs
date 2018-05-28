@@ -1,6 +1,6 @@
-extern crate adequate_math;
+extern crate okmath;
 
-use adequate_math::*;
+use okmath::*;
 
 
 #[test]
