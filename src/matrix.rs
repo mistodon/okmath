@@ -85,7 +85,7 @@ macro_rules! matrix_type
 
         impl<T: Copy> Mul for $name<T>
         where
-            T: Mul<Output=T> + Sum<T>
+            T: Mul<Output=T> + Add<Output=T>
         {
             type Output = Self;
 
@@ -101,7 +101,7 @@ macro_rules! matrix_type
 
         impl<T: Copy> Mul<$vec<T>> for $name<T>
         where
-            T: Mul<Output=T> + Sum<T>
+            T: Mul<Output=T> + Add<Output=T>
         {
             type Output = $vec<T>;
 

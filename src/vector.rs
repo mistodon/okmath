@@ -183,9 +183,16 @@ macro_rules! vector_type
         impl<T> $name<T>
         where
             Self: Mul<Output=Self>,
-            T: Copy + Sum<T>
+            T: Copy + Add<Output=T>,
         {
-            pub fn dot(&self, other: Self) -> T { (*self * other).0.iter().cloned().sum() }
+            pub fn dot(&self, other: Self) -> T {
+                let v = *self * other;
+                let mut result = v.0[0];
+                for i in 1..$size {
+                    result = result + v.0[i];
+                }
+                result
+            }
 
             pub fn mag_sq(&self) -> T { self.dot(*self) }
         }
@@ -193,7 +200,7 @@ macro_rules! vector_type
         impl<T> $name<T>
         where
             Self: Mul<Output=Self> + Mul<T, Output=Self>,
-            T: Copy + Sum<T> + Div<Output=T>
+            T: Copy + Add<Output=T> + Div<Output=T>
         {
             pub fn proj(&self, other: Self) -> Self { other * (self.dot(other) / other.dot(other)) }
         }
