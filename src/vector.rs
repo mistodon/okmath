@@ -208,6 +208,12 @@ macro_rules! vector_type
                 assert!(mag != T::zero(), "attempt to normalize zero vector");
                 *self / mag
             }
+
+            pub fn norm_zero(&self) -> Self
+            {
+                let mag = self.mag();
+                if mag == T::zero() { *self } else { *self / mag }
+            }
         }
     }
 }
