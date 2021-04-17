@@ -1,16 +1,12 @@
 [package]
 name = "okmath"
-version = "0.1.0"
-authors = ["***Realname*** ***Lastname*** <***realname***.***lastname***.000@gmail.com>"]
+version = "0.2.0"
+authors = ["Vi <violet@hey.com>"]
+edition = "2018"
 
-[dependencies.serde]
-version = "~1.0.37"
-optional = true
-
-[dependencies.serde_derive]
-version = "~1.0.37"
-optional = true
+[dependencies]
+serde = { version = "~1.0.125", features = ["derive"], optional = true}
 
 [features]
-default = []
-serde_support = ["serde", "serde_derive"]
+default = ["serde_support"]
+serde_support = ["serde"]

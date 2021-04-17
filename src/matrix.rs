@@ -1,229 +1,207 @@
+use std::array::IntoIter;
 use std::iter::Sum;
 use std::ops::*;
 
-use primitive::Primitive;
-use vector::*;
+use crate::helpers::collect_to_array;
+use crate::primitive::Primitive;
+use crate::vector::*;
 
+pub use crate::matrix_utilities::*;
 
-pub use matrix_utilities::*;
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ArrayMat<T, const N: usize>(pub [[T; N]; N]);
 
-
-macro_rules! matrix_type
-{
-    (
-        $name: ident,
-        $vec: ident,
-        $smaller_vec: ident,
-        $size: tt,
-        $smaller_size: tt,
-        [$($index: tt),*],
-        { $($col: tt : [$($row: tt),*]),* },
-        [$([$($id: ident),*]),*]) =>
-    {
-        #[cfg_attr(feature = "serde_support", derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize))]
-        #[cfg_attr(not(feature = "serde_support"), derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash))]
-        pub struct $name<T: Copy>(pub [[T; $size]; $size]);
-
-        impl<T: Copy> $name<T>
-        {
-            pub fn row(&self, index: usize) -> $vec<T>
-            {
-                $vec([
-                    $(
-                        self.0[$index][index]
-                    ),*
-                ])
-            }
-
-            pub fn col(&self, index: usize) -> $vec<T>
-            {
-                $vec(self.0[index])
-            }
-
-            pub fn transpose(&self) -> Self
-            {
-                $name([
-                    $(
-                        [ $(self.0[$row][$col]),* ]
-                    ),*
-                ])
-            }
-        }
-
-        impl<T> $name<T>
-        where
-            T: Copy + Primitive
-        {
-            pub fn identity() -> Self
-            {
-                $name([
-                    $(
-                        [ $(T::$id()),* ]
-                    ),*
-                ])
-            }
-
-            // TODO(***realname***): Report bug to clippy? This can't be a memcpy.
-            #[cfg_attr(feature = "cargo-clippy", allow(manual_memcpy))]
-            pub fn scale(scale: [T; $size]) -> Self
-            {
-                let mut base = Self::identity();
-                for i in 0..$size
-                {
-                    base.0[i][i] = scale[i];
-                }
-                base
-            }
-
-            pub fn translation(translation: [T; $smaller_size]) -> Self
-            {
-                let mut base = Self::identity();
-                base.0[$size - 1] = $smaller_vec(translation).extend(T::one()).0;
-                base
-            }
-        }
-
-        impl<T: Copy> Mul for $name<T>
-        where
-            T: Mul<Output=T> + Sum<T>
-        {
-            type Output = Self;
-
-            fn mul(self, other: Self) -> Self::Output
-            {
-                $name([
-                    $(
-                        [ $( self.row($row).dot(other.col($col))),* ]
-                    ),*
-                ])
-            }
-        }
-
-        impl<T: Copy> Mul<$vec<T>> for $name<T>
-        where
-            T: Mul<Output=T> + Sum<T>
-        {
-            type Output = $vec<T>;
-
-            fn mul(self, vector: $vec<T>) -> Self::Output
-            {
-                $vec([
-                    $(
-                        self.row($index).dot(vector)
-                    ),*
-                ])
-            }
-        }
+impl<T: Copy + Default, const N: usize> Default for ArrayMat<T, N> {
+    fn default() -> Self {
+        ArrayMat([[T::default(); N]; N])
     }
 }
 
+impl<T, const N: usize> ArrayMat<T, N> {
+    pub fn new(array: [[T; N]; N]) -> Self {
+        Self::from(array)
+    }
+}
 
-matrix_type!(Mat2, Vec2, Vec1, 2, 1, [0, 1],
-    {
-        0: [0, 1],
-        1: [0, 1]
-    },
-    [
-        [one, zero],
-        [zero, one]
-    ]
-);
+impl<T, const N: usize> From<[[T; N]; N]> for ArrayMat<T, N> {
+    fn from(array: [[T; N]; N]) -> Self {
+        ArrayMat(array)
+    }
+}
 
-matrix_type!(Mat3, Vec3, Vec2, 3, 2, [0, 1, 2],
-    {
-        0: [0, 1, 2],
-        1: [0, 1, 2],
-        2: [0, 1, 2]
-    },
-    [
-        [one, zero, zero],
-        [zero, one, zero],
-        [zero, zero, one]
-    ]
-);
+impl<T: Copy, const N: usize> ArrayMat<T, N> {
+    pub fn row(&self, index: usize) -> ArrayVec<T, N> {
+        IntoIter::new(self.0).map(|col| col[index]).collect()
+    }
 
-matrix_type!(Mat4, Vec4, Vec3, 4, 3, [0, 1, 2, 3],
-    {
-        0: [0, 1, 2, 3],
-        1: [0, 1, 2, 3],
-        2: [0, 1, 2, 3],
-        3: [0, 1, 2, 3]
-    },
-    [
-        [one, zero, zero, zero],
-        [zero, one, zero, zero],
-        [zero, zero, one, zero],
-        [zero, zero, zero, one]
-    ]
-);
+    pub fn col(&self, index: usize) -> ArrayVec<T, N> {
+        ArrayVec::new(self.0[index])
+    }
 
-impl<T> Mat2<T>
+    pub fn transpose(&self) -> Self {
+        ArrayMat(collect_to_array((0..N).map(|index| self.row(index).0)))
+    }
+}
+
+impl<T: Copy + Primitive, const N: usize> ArrayMat<T, N> {
+    pub fn identity() -> Self {
+        ArrayMat(collect_to_array((0..N).map(|i| {
+            collect_to_array((0..N).map(|j| if i == j { T::one() } else { T::zero() }))
+        })))
+    }
+
+    pub fn scale(scale: [T; N]) -> Self {
+        ArrayMat(collect_to_array((0..N).map(|i| {
+            collect_to_array((0..N).map(|j| if i == j { scale[i] } else { T::zero() }))
+        })))
+    }
+
+    pub fn translation_homogenous(translation: [T; N]) -> Self {
+        ArrayMat(collect_to_array((0..N).map(|i| {
+            if i == (N - 1) {
+                translation
+            } else {
+                collect_to_array((0..N).map(|j| if i == j { T::one() } else { T::zero() }))
+            }
+        })))
+    }
+}
+
+impl<T: Copy, const N: usize> Mul for ArrayMat<T, N>
 where
-    T: Copy + Primitive
+    T: Mul<Output = T> + Sum<T>,
 {
-    pub fn extend(&self) -> Mat3<T>
-    {
-        let mut m = Mat3::identity();
-        for col in 0..2
-        {
-            m.0[col][..2].clone_from_slice(&self.0[col][..2]);
-        }
-        m
+    type Output = Self;
+
+    fn mul(self, other: Self) -> Self::Output {
+        ArrayMat(collect_to_array((0..N).map(|col| {
+            collect_to_array((0..N).map(|row| self.row(row).dot(other.col(col))))
+        })))
     }
 }
 
-impl<T> Mat3<T>
+impl<T: Copy, const N: usize> Mul<ArrayVec<T, N>> for ArrayMat<T, N>
 where
-    T: Copy + Primitive
+    T: Mul<Output = T> + Sum<T>,
 {
-    pub fn extend(&self) -> Mat4<T>
-    {
-        let mut m = Mat4::identity();
-        for col in 0..3
-        {
-            m.0[col][..3].clone_from_slice(&self.0[col][..3]);
-        }
-        m
-    }
+    type Output = ArrayVec<T, N>;
 
-    pub fn retract(&self) -> Mat2<T>
-    {
-        let mut m = Mat2::identity();
-        for col in 0..2
-        {
-            m.0[col][..2].clone_from_slice(&self.0[col][..2]);
-        }
-        m
+    fn mul(self, vector: ArrayVec<T, N>) -> Self::Output {
+        (0..N).map(|index| self.row(index).dot(vector)).collect()
     }
 }
 
-impl<T> Mat4<T>
+pub type Mat1<T> = ArrayMat<T, 1>;
+pub type Mat2<T> = ArrayMat<T, 2>;
+pub type Mat3<T> = ArrayMat<T, 3>;
+pub type Mat4<T> = ArrayMat<T, 4>;
+
+fn extend_matrix<T: Copy + Primitive, const N: usize, const N_PLUS_1: usize>(
+    mat: &ArrayMat<T, N>,
+) -> ArrayMat<T, N_PLUS_1> {
+    ArrayMat(collect_to_array((0..N_PLUS_1).map(|col| {
+        collect_to_array((0..N_PLUS_1).map(|row| {
+            if col < N && row < N {
+                mat.0[col][row]
+            } else if col == N && row == N {
+                T::one()
+            } else {
+                T::zero()
+            }
+        }))
+    })))
+}
+
+fn retract_matrix<T: Copy + Primitive, const N: usize, const N_MINUS_1: usize>(
+    mat: &ArrayMat<T, N>,
+) -> ArrayMat<T, N_MINUS_1> {
+    ArrayMat(collect_to_array(
+        IntoIter::new(mat.0).map(|col| collect_to_array(IntoIter::new(col))),
+    ))
+}
+
+impl<T: Copy + Primitive> Mat1<T> {
+    pub fn extend(&self) -> Mat2<T> {
+        extend_matrix::<T, 1, 2>(self)
+    }
+}
+
+impl<T: Copy + Primitive> Mat2<T> {
+    pub fn extend(&self) -> Mat3<T> {
+        extend_matrix::<T, 2, 3>(self)
+    }
+
+    pub fn retract(&self) -> Mat1<T> {
+        retract_matrix::<T, 2, 1>(self)
+    }
+
+    pub fn translation(translation: [T; 1]) -> Self {
+        Self::translation_homogenous(ArrayVec(translation).extend(T::one()).0)
+    }
+}
+
+impl<T: Copy + Primitive> Mat3<T> {
+    pub fn extend(&self) -> Mat4<T> {
+        extend_matrix::<T, 3, 4>(self)
+    }
+
+    pub fn retract(&self) -> Mat2<T> {
+        retract_matrix::<T, 3, 2>(self)
+    }
+
+    pub fn translation(translation: [T; 2]) -> Self {
+        Self::translation_homogenous(ArrayVec(translation).extend(T::one()).0)
+    }
+}
+
+impl<T: Copy + Primitive> Mat4<T> {
+    pub fn retract(&self) -> Mat3<T> {
+        retract_matrix::<T, 4, 3>(self)
+    }
+
+    pub fn translation(translation: [T; 3]) -> Self {
+        Self::translation_homogenous(ArrayVec(translation).extend(T::one()).0)
+    }
+}
+
+#[cfg(feature = "serde_support")]
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+#[cfg(feature = "serde_support")]
+impl<T, const N: usize> Serialize for ArrayMat<T, N>
 where
-    T: Copy + Primitive
+    [[T; N]; N]: Serialize,
 {
-    pub fn retract(&self) -> Mat3<T>
+    fn serialize<S>(&self, s: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
+    where
+        S: Serializer,
     {
-        let mut m = Mat3::identity();
-        for col in 0..3
-        {
-            m.0[col][..3].clone_from_slice(&self.0[col][..3]);
-        }
-        m
+        self.0.serialize(s)
     }
 }
 
+#[cfg(feature = "serde_support")]
+impl<'de, T, const N: usize> Deserialize<'de> for ArrayMat<T, N>
+where
+    [[T; N]; N]: Deserialize<'de>,
+{
+    fn deserialize<D>(d: D) -> Result<Self, <D as Deserializer<'de>>::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        Ok(ArrayMat(<[[T; N]; N] as Deserialize<'de>>::deserialize(d)?))
+    }
+}
 
 #[cfg(test)]
-mod tests
-{
+mod tests {
     use super::*;
 
     #[test]
-    fn identity()
-    {
-        let m2 = Mat2([[1, 0], [0, 1]]);
-        let m3 = Mat3([[1, 0, 0], [0, 1, 0], [0, 0, 1]]);
-        let m4 = Mat4([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]);
+    fn identity() {
+        let m2 = Mat2::new([[1, 0], [0, 1]]);
+        let m3 = Mat3::new([[1, 0, 0], [0, 1, 0], [0, 0, 1]]);
+        let m4 = Mat4::new([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]);
 
         assert_eq!(Mat2::identity(), m2);
         assert_eq!(Mat3::identity(), m3);
@@ -231,32 +209,20 @@ mod tests
     }
 
     #[test]
-    fn transpose()
-    {
-        let m = Mat4([
-            [0, 1, 2, 3],
-            [4, 5, 6, 7],
-            [8, 9, 10, 11],
-            [12, 13, 14, 15]
-        ]);
-        let expected = Mat4([
-            [0, 4, 8, 12],
-            [1, 5, 9, 13],
-            [2, 6, 10, 14],
-            [3, 7, 11, 15]
-        ]);
+    fn transpose() {
+        let m = Mat4::new([[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11], [12, 13, 14, 15]]);
+        let expected = Mat4::new([[0, 4, 8, 12], [1, 5, 9, 13], [2, 6, 10, 14], [3, 7, 11, 15]]);
         assert_eq!(m.transpose(), expected);
     }
 
     #[test]
-    fn rows_and_columns()
-    {
+    fn rows_and_columns() {
         let a = vec4(0, 1, 2, 3);
         let b = vec4(4, 5, 6, 7);
         let c = vec4(8, 9, 10, 11);
         let d = vec4(12, 13, 14, 15);
 
-        let m = Mat4([a.0, b.0, c.0, d.0]);
+        let m = Mat4::new([a.0, b.0, c.0, d.0]);
         let mt = m.transpose();
 
         assert_eq!(m.col(0), a);
@@ -271,40 +237,41 @@ mod tests
     }
 
     #[test]
-    fn matrix_multiplication()
-    {
-        let a = Mat4([[2, 0, 0, 0], [0, 2, 0, 0], [0, 0, 2, 0], [0, 0, 0, 1]]);
-        let b = Mat4([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [1, 2, 3, 1]]);
-        let ab = Mat4([[2, 0, 0, 0], [0, 2, 0, 0], [0, 0, 2, 0], [2, 4, 6, 1]]);
-        let ba = Mat4([[2, 0, 0, 0], [0, 2, 0, 0], [0, 0, 2, 0], [1, 2, 3, 1]]);
+    fn matrix_multiplication() {
+        let a = Mat4::new([[2, 0, 0, 0], [0, 2, 0, 0], [0, 0, 2, 0], [0, 0, 0, 1]]);
+        let b = Mat4::new([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [1, 2, 3, 1]]);
+        let ab = Mat4::new([[2, 0, 0, 0], [0, 2, 0, 0], [0, 0, 2, 0], [2, 4, 6, 1]]);
+        let ba = Mat4::new([[2, 0, 0, 0], [0, 2, 0, 0], [0, 0, 2, 0], [1, 2, 3, 1]]);
         assert_eq!(b * a, ba);
         assert_eq!(a * b, ab);
     }
 
     #[test]
-    fn scaling()
-    {
+    fn scaling() {
         let v = vec4(1, 2, 3, 4);
         let m = Mat4::scale([4, 3, 2, 1]);
         assert_eq!(m * v, vec4(4, 6, 6, 4));
     }
 
     #[test]
-    fn translating()
-    {
+    fn translating() {
         let v = vec4(0, 0, 0, 1);
         let m = Mat4::translation([2, 4, 6]);
         assert_eq!(m * v, vec4(2, 4, 6, 1));
     }
 
     #[test]
-    fn extending_and_retracting()
-    {
-        let m2 = Mat2([[1, 2], [5, 6]]);
-        let m3 = Mat3([[1, 2, 3], [5, 6, 7], [9, 10, 11]]);
-        let m4 = Mat4([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16]]);
-        let e3 = Mat3([[1, 2, 0], [5, 6, 0], [0, 0, 1]]);
-        let e4 = Mat4([[1, 2, 3, 0], [5, 6, 7, 0], [9, 10, 11, 0], [0, 0, 0, 1]]);
+    fn extending_and_retracting() {
+        let m2 = Mat2::new([[1, 2], [5, 6]]);
+        let m3 = Mat3::new([[1, 2, 3], [5, 6, 7], [9, 10, 11]]);
+        let m4 = Mat4::new([
+            [1, 2, 3, 4],
+            [5, 6, 7, 8],
+            [9, 10, 11, 12],
+            [13, 14, 15, 16],
+        ]);
+        let e3 = Mat3::new([[1, 2, 0], [5, 6, 0], [0, 0, 1]]);
+        let e4 = Mat4::new([[1, 2, 3, 0], [5, 6, 7, 0], [9, 10, 11, 0], [0, 0, 0, 1]]);
 
         assert_eq!(m4.retract(), m3);
         assert_eq!(m3.retract(), m2);
@@ -312,4 +279,3 @@ mod tests
         assert_eq!(m3.extend(), e4);
     }
 }
-

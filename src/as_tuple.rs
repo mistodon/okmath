@@ -1,48 +1,55 @@
-pub trait AsTuple
-{
+pub trait AsTuple {
     type Tuple;
 
     fn as_tuple(&self) -> Self::Tuple;
 }
 
+impl<T: Copy> AsTuple for [T; 0] {
+    type Tuple = ();
 
-impl<T: Copy> AsTuple for [T; 1]
-{
+    fn as_tuple(&self) -> Self::Tuple {
+        ()
+    }
+}
+
+impl<T: Copy> AsTuple for [T; 1] {
     type Tuple = (T,);
 
-    fn as_tuple(&self) -> Self::Tuple { (self[0],) }
+    fn as_tuple(&self) -> Self::Tuple {
+        (self[0],)
+    }
 }
 
-impl<T: Copy> AsTuple for [T; 2]
-{
+impl<T: Copy> AsTuple for [T; 2] {
     type Tuple = (T, T);
 
-    fn as_tuple(&self) -> Self::Tuple { (self[0], self[1]) }
+    fn as_tuple(&self) -> Self::Tuple {
+        (self[0], self[1])
+    }
 }
 
-impl<T: Copy> AsTuple for [T; 3]
-{
+impl<T: Copy> AsTuple for [T; 3] {
     type Tuple = (T, T, T);
 
-    fn as_tuple(&self) -> Self::Tuple { (self[0], self[1], self[2]) }
+    fn as_tuple(&self) -> Self::Tuple {
+        (self[0], self[1], self[2])
+    }
 }
 
-impl<T: Copy> AsTuple for [T; 4]
-{
+impl<T: Copy> AsTuple for [T; 4] {
     type Tuple = (T, T, T, T);
 
-    fn as_tuple(&self) -> Self::Tuple { (self[0], self[1], self[2], self[3]) }
+    fn as_tuple(&self) -> Self::Tuple {
+        (self[0], self[1], self[2], self[3])
+    }
 }
 
-
 #[cfg(test)]
-mod tests
-{
+mod tests {
     use super::*;
 
     #[test]
-    fn as_tuple_for_arrays()
-    {
+    fn as_tuple_for_arrays() {
         let a2 = [1, 2];
         let a3 = [1, 2, 3];
         let a4 = [1, 2, 3, 4];
@@ -52,4 +59,3 @@ mod tests
         assert_eq!(a4.as_tuple(), (1, 2, 3, 4));
     }
 }
-

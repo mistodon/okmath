@@ -2,10 +2,8 @@ extern crate okmath;
 
 use okmath::*;
 
-
 #[test]
-fn basic_vector_usage()
-{
+fn basic_vector_usage() {
     let a = vec3(1, 2, 3);
     let b = vec3(4, 5, 6);
 
@@ -18,10 +16,8 @@ fn basic_vector_usage()
     assert_eq!(c, vec3(3, 2, 1));
 }
 
-
 #[test]
-fn complex_vector_operations()
-{
+fn complex_vector_operations() {
     let a = vec3(1, 2, 3);
     assert_eq!(a.dot(a), 14);
 
@@ -29,19 +25,15 @@ fn complex_vector_operations()
     assert_eq!(b.mag(), 5.0);
 }
 
-
 #[test]
-fn casting()
-{
+fn casting() {
     let high_p = vec4(1.0, 2.0, 3.0, 4.0_f64);
     let low_p = vec4(1.0, 2.0, 3.0, 4.0_f32);
     assert_eq!(high_p.as_f32(), low_p);
 }
 
-
 #[test]
-fn matrix_transformations()
-{
+fn matrix_transformations() {
     let angle = ::std::f32::consts::PI / 2.0;
     let a = Mat4::identity();
     let b = Mat4::scale([2.0, 3.0, 4.0, 1.0]);
@@ -55,4 +47,3 @@ fn matrix_transformations()
 
     assert_eq!(mv, vec4(5.0, 4.0, -3.0, 1.0));
 }
-
