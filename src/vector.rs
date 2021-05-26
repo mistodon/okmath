@@ -407,6 +407,13 @@ mod tests {
     use super::*;
 
     #[test]
+    fn into() {
+        let v2 = vec2(2, 3);
+        let a: [usize; 2] = v2.into();
+        assert_eq!(a, [2, 3]);
+    }
+
+    #[test]
     fn map() {
         let v2 = vec2(2, 3);
         let v3 = vec3(4, 5, 6);

@@ -207,6 +207,13 @@ mod tests {
     use super::*;
 
     #[test]
+    fn into() {
+        let m2 = Mat2::new([[1, 2], [3, 4]]);
+        let a: [[usize; 2]; 2] = m2.into();
+        assert_eq!(a, [[1, 2], [3, 4]]);
+    }
+
+    #[test]
     fn identity() {
         let m2 = Mat2::new([[1, 0], [0, 1]]);
         let m3 = Mat3::new([[1, 0, 0], [0, 1, 0], [0, 0, 1]]);
