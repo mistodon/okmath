@@ -17,6 +17,15 @@ impl<T: Copy + Default, const N: usize> Default for ArrayMat<T, N> {
     }
 }
 
+impl<T, const N: usize> Into<[[T; N]; N]> for ArrayMat<T, N>
+where
+    [[T; N]; N]: Clone
+{
+    fn into(self) -> [[T; N]; N] {
+        self.0.clone()
+    }
+}
+
 impl<T, const N: usize> ArrayMat<T, N> {
     pub fn new(array: [[T; N]; N]) -> Self {
         Self::from(array)

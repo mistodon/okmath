@@ -16,6 +16,15 @@ impl<T: Copy + Default, const N: usize> Default for ArrayVec<T, N> {
     }
 }
 
+impl<T, const N: usize> Into<[T; N]> for ArrayVec<T, N>
+where
+    [T; N]: Clone
+{
+    fn into(self) -> [T; N] {
+        self.0.clone()
+    }
+}
+
 impl<T, const N: usize> ArrayVec<T, N> {
     pub fn new(array: [T; N]) -> Self {
         Self::from(array)
