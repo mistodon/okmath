@@ -26,7 +26,7 @@ pub fn perspective_projection(aspect: f32, fov: f32, near: f32, far: f32) -> Mat
 }
 
 pub fn axis_rotation(axis: [f32; 3], angle: f32) -> Mat4<f32> {
-    let (x, y, z) = Vec3::new(axis).norm().as_tuple();
+    let (x, y, z) = Vec3::new(axis).norm_zero().as_tuple();
     let (s, c) = angle.sin_cos();
     let ic = 1.0 - c;
 
@@ -68,9 +68,9 @@ pub fn euler_rotation(angles: [f32; 3]) -> Mat4<f32> {
 }
 
 pub fn look_rotation(forward: [f32; 3], up: [f32; 3]) -> Mat4<f32> {
-    let forward = Vec3::new(forward).norm();
-    let up = Vec3::new(up).norm();
-    let right = up.cross(forward).norm();
+    let forward = Vec3::new(forward).norm_zero();
+    let up = Vec3::new(up).norm_zero();
+    let right = up.cross(forward).norm_zero();
     let up = forward.cross(right);
 
     Mat4::new([
