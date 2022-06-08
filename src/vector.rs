@@ -26,8 +26,8 @@ where
 }
 
 impl<T, const N: usize> ArrayVec<T, N> {
-    pub fn new(array: [T; N]) -> Self {
-        Self::from(array)
+    pub const fn new(array: [T; N]) -> Self {
+        ArrayVec(array)
     }
 }
 
