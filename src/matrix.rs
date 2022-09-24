@@ -1,5 +1,6 @@
 use std::array::IntoIter;
 use std::iter::Sum;
+use std::mem::MaybeUninit;
 use std::ops::*;
 
 use crate::helpers::collect_to_array;
@@ -19,7 +20,7 @@ impl<T: Copy + Default, const N: usize> Default for ArrayMat<T, N> {
 
 impl<T, const N: usize> Into<[[T; N]; N]> for ArrayMat<T, N>
 where
-    [[T; N]; N]: Clone
+    [[T; N]; N]: Clone,
 {
     fn into(self) -> [[T; N]; N] {
         self.0.clone()
@@ -40,7 +41,12 @@ impl<T, const N: usize> From<[[T; N]; N]> for ArrayMat<T, N> {
 
 impl<T: Copy, const N: usize> ArrayMat<T, N> {
     pub fn row(&self, index: usize) -> ArrayVec<T, N> {
-        IntoIter::new(self.0).map(|col| col[index]).collect()
+        let mut result = unsafe { MaybeUninit::<[T; N]>::uninit().assume_init() };
+        for i in 0..N {
+            result[i] = self.0[i][index];
+        }
+
+        ArrayVec(result)
     }
 
     pub fn col(&self, index: usize) -> ArrayVec<T, N> {
@@ -48,31 +54,37 @@ impl<T: Copy, const N: usize> ArrayMat<T, N> {
     }
 
     pub fn transpose(&self) -> Self {
-        ArrayMat(collect_to_array((0..N).map(|index| self.row(index).0)))
+        let mut result = unsafe { MaybeUninit::<[[T; N]; N]>::uninit().assume_init() };
+        for i in 0..N {
+            for j in 0..N {
+                result[j][i] = self.0[i][j];
+            }
+        }
+        ArrayMat(result)
     }
 }
 
 impl<T: Copy + Primitive, const N: usize> ArrayMat<T, N> {
     pub fn identity() -> Self {
-        ArrayMat(collect_to_array((0..N).map(|i| {
-            collect_to_array((0..N).map(|j| if i == j { T::one() } else { T::zero() }))
-        })))
+        let mut result = [[T::zero(); N]; N];
+        for i in 0..N {
+            result[i][i] = T::one();
+        }
+        ArrayMat(result)
     }
 
     pub fn scale(scale: [T; N]) -> Self {
-        ArrayMat(collect_to_array((0..N).map(|i| {
-            collect_to_array((0..N).map(|j| if i == j { scale[i] } else { T::zero() }))
-        })))
+        let mut result = [[T::zero(); N]; N];
+        for i in 0..N {
+            result[i][i] = scale[i];
+        }
+        ArrayMat(result)
     }
 
     pub fn translation_homogenous(translation: [T; N]) -> Self {
-        ArrayMat(collect_to_array((0..N).map(|i| {
-            if i == (N - 1) {
-                translation
-            } else {
-                collect_to_array((0..N).map(|j| if i == j { T::one() } else { T::zero() }))
-            }
-        })))
+        let mut result = Self::identity();
+        result.0[N - 1] = translation;
+        result
     }
 }
 
@@ -83,9 +95,13 @@ where
     type Output = Self;
 
     fn mul(self, other: Self) -> Self::Output {
-        ArrayMat(collect_to_array((0..N).map(|col| {
-            collect_to_array((0..N).map(|row| self.row(row).dot(other.col(col))))
-        })))
+        let mut result = unsafe { MaybeUninit::<[[T; N]; N]>::uninit().assume_init() };
+        for col in 0..N {
+            for row in 0..N {
+                result[col][row] = self.row(row).dot(other.col(col));
+            }
+        }
+        ArrayMat(result)
     }
 }
 
@@ -96,7 +112,11 @@ where
     type Output = ArrayVec<T, N>;
 
     fn mul(self, vector: ArrayVec<T, N>) -> Self::Output {
-        (0..N).map(|index| self.row(index).dot(vector)).collect()
+        let mut result = unsafe { MaybeUninit::<[T; N]>::uninit().assume_init() };
+        for i in 0..N {
+            result[i] = self.row(i).dot(vector);
+        }
+        ArrayVec(result)
     }
 }
 

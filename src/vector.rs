@@ -1,5 +1,6 @@
 use std::array::IntoIter;
 use std::iter::{FromIterator, Sum};
+use std::mem::MaybeUninit;
 use std::ops::*;
 
 use crate::as_tuple::AsTuple;
@@ -18,7 +19,7 @@ impl<T: Copy + Default, const N: usize> Default for ArrayVec<T, N> {
 
 impl<T, const N: usize> Into<[T; N]> for ArrayVec<T, N>
 where
-    [T; N]: Clone
+    [T; N]: Clone,
 {
     fn into(self) -> [T; N] {
         self.0.clone()
@@ -39,7 +40,14 @@ impl<T, const N: usize> From<[T; N]> for ArrayVec<T, N> {
 
 impl<T, const N: usize> FromIterator<T> for ArrayVec<T, N> {
     fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
-        ArrayVec(collect_to_array(iter.into_iter()))
+        let mut result = unsafe { MaybeUninit::<[T; N]>::uninit().assume_init() };
+        let mut iter = iter.into_iter();
+
+        for i in 0..N {
+            result[i] = iter.next().expect("need at least {N} elements to collect");
+        }
+
+        ArrayVec(result)
     }
 }
 
@@ -55,7 +63,11 @@ impl<T: Copy, const N: usize> ArrayVec<T, N> {
         U: Copy,
         F: Fn(T) -> U,
     {
-        ArrayVec(collect_to_array(IntoIter::new(self.0).map(operator)))
+        let mut result = unsafe { MaybeUninit::<[U; N]>::uninit().assume_init() };
+        for i in 0..N {
+            result[i] = operator(self.0[i]);
+        }
+        ArrayVec(result)
     }
 
     #[inline(always)]
@@ -65,11 +77,11 @@ impl<T: Copy, const N: usize> ArrayVec<T, N> {
         V: Copy,
         F: Fn(T, U) -> V,
     {
-        ArrayVec(collect_to_array(
-            IntoIter::new(self.0)
-                .zip(IntoIter::new(other.0))
-                .map(|(a, b)| operator(a, b)),
-        ))
+        let mut result = unsafe { MaybeUninit::<[V; N]>::uninit().assume_init() };
+        for i in 0..N {
+            result[i] = operator(self.0[i], other.0[i]);
+        }
+        ArrayVec(result)
     }
 
     #[inline(always)]

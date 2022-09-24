@@ -10,3 +10,10 @@ serde = { version = "~1.0.125", features = ["derive"], optional = true}
 [features]
 default = ["serde_support"]
 serde_support = ["serde"]
+
+[dev-dependencies]
+criterion = "~0.3.5"
+
+[[bench]]
+name = "operations"
+harness = false
