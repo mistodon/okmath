@@ -1,9 +1,7 @@
-use std::array::IntoIter;
 use std::iter::Sum;
 use std::mem::MaybeUninit;
 use std::ops::*;
 
-use crate::helpers::collect_to_array;
 use crate::primitive::Primitive;
 use crate::vector::*;
 
@@ -128,25 +126,21 @@ pub type Mat4<T> = ArrayMat<T, 4>;
 fn extend_matrix<T: Copy + Primitive, const N: usize, const N_PLUS_1: usize>(
     mat: &ArrayMat<T, N>,
 ) -> ArrayMat<T, N_PLUS_1> {
-    ArrayMat(collect_to_array((0..N_PLUS_1).map(|col| {
-        collect_to_array((0..N_PLUS_1).map(|row| {
-            if col < N && row < N {
-                mat.0[col][row]
-            } else if col == N && row == N {
-                T::one()
-            } else {
-                T::zero()
-            }
-        }))
-    })))
+    let mut result = ArrayMat::<T, N_PLUS_1>::identity();
+    for i in 0..N {
+        result.0[i][0..N].copy_from_slice(&mat.0[i]);
+    }
+    result
 }
 
 fn retract_matrix<T: Copy + Primitive, const N: usize, const N_MINUS_1: usize>(
     mat: &ArrayMat<T, N>,
 ) -> ArrayMat<T, N_MINUS_1> {
-    ArrayMat(collect_to_array(
-        IntoIter::new(mat.0).map(|col| collect_to_array(IntoIter::new(col))),
-    ))
+    let mut result = unsafe { MaybeUninit::<[[T; N_MINUS_1]; N_MINUS_1]>::uninit().assume_init() };
+    for i in 0..N_MINUS_1 {
+        result[i].copy_from_slice(&mat.0[i][0..N_MINUS_1]);
+    }
+    ArrayMat(result)
 }
 
 impl<T: Copy + Primitive> Mat1<T> {
@@ -193,10 +187,10 @@ impl<T: Copy + Primitive> Mat4<T> {
     }
 }
 
-#[cfg(feature = "serde_support")]
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-#[cfg(feature = "serde_support")]
+#[cfg(feature = "serde")]
 impl<T, const N: usize> Serialize for ArrayMat<T, N>
 where
     [[T; N]; N]: Serialize,
@@ -209,7 +203,7 @@ where
     }
 }
 
-#[cfg(feature = "serde_support")]
+#[cfg(feature = "serde")]
 impl<'de, T, const N: usize> Deserialize<'de> for ArrayMat<T, N>
 where
     [[T; N]; N]: Deserialize<'de>,

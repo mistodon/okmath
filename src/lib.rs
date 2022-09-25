@@ -12,7 +12,6 @@ pub mod vector;
 
 mod as_tuple;
 mod float;
-mod helpers;
 mod matrix_utilities;
 mod primitive;
 

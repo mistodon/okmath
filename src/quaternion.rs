@@ -7,10 +7,7 @@ use crate::primitive::Primitive;
 use crate::vector::{vec3, Vec3};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(
-    feature = "serde_support",
-    derive(serde::Serialize, serde::Deserialize)
-)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Quaternion<T: Copy>(pub T, pub Vec3<T>);
 
 impl<T: Copy + Primitive> Quaternion<T> {

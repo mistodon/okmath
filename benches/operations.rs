@@ -72,6 +72,20 @@ fn bench_matmulvec(c: &mut Criterion) {
     });
 }
 
+fn bench_extend_mat(c: &mut Criterion) {
+    let t = Mat3::new([[1., 2., 3.], [5., 6., 7.], [9., 1., 2.]]);
+    c.bench_function(&format!("Mat3::extend"), |m| {
+        m.iter(|| black_box(t).extend())
+    });
+}
+
+fn bench_retract_mat(c: &mut Criterion) {
+    let t = Mat3::new([[1., 2., 3.], [5., 6., 7.], [9., 1., 2.]]);
+    c.bench_function(&format!("Mat3::retract"), |m| {
+        m.iter(|| black_box(t).retract())
+    });
+}
+
 criterion_group!(vectors, bench_map, bench_zipmap);
 criterion_group!(
     matrices,
@@ -79,6 +93,8 @@ criterion_group!(
     bench_matmulvec,
     bench_transpose,
     bench_identity,
-    bench_translation
+    bench_translation,
+    bench_extend_mat,
+    bench_retract_mat,
 );
 criterion_main!(vectors, matrices);

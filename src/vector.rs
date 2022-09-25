@@ -1,11 +1,9 @@
-use std::array::IntoIter;
 use std::iter::{FromIterator, Sum};
 use std::mem::MaybeUninit;
 use std::ops::*;
 
 use crate::as_tuple::AsTuple;
 use crate::float::Float;
-use crate::helpers::collect_to_array;
 use crate::primitive::Primitive;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -385,10 +383,10 @@ pub fn vec4<T: Copy>(x: T, y: T, z: T, w: T) -> Vec4<T> {
     Vec4::new([x, y, z, w])
 }
 
-#[cfg(feature = "serde_support")]
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-#[cfg(feature = "serde_support")]
+#[cfg(feature = "serde")]
 impl<T, const N: usize> Serialize for ArrayVec<T, N>
 where
     [T; N]: Serialize,
@@ -401,7 +399,7 @@ where
     }
 }
 
-#[cfg(feature = "serde_support")]
+#[cfg(feature = "serde")]
 impl<'de, T, const N: usize> Deserialize<'de> for ArrayVec<T, N>
 where
     [T; N]: Deserialize<'de>,
