@@ -3,6 +3,8 @@ name = "okmath"
 version = "0.3.0"
 authors = ["Vi <violet@hey.com>"]
 edition = "2021"
+description = "A 3D maths crate that is pretty OK. It's simple and flexible at least."
+license = "CC0-1.0"
 
 [dependencies]
 serde = { version = "~1.0.145", features = ["derive"], optional = true}
