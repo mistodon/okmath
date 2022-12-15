@@ -49,10 +49,17 @@ impl<T, const N: usize> FromIterator<T> for ArrayVec<T, N> {
     }
 }
 
+impl<T: Copy, const N: usize> TryFrom<&[T]> for ArrayVec<T, N> {
+    type Error = std::array::TryFromSliceError;
+
+    fn try_from(slice: &[T]) -> Result<Self, Self::Error> {
+        Ok(ArrayVec(slice.try_into()?))
+    }
+}
+
 impl<T: Copy, const N: usize> ArrayVec<T, N> {
     pub fn from_slice(slice: &[T]) -> Self {
-        assert!(slice.len() >= N);
-        Self::from_iter(slice.iter().copied())
+        Self::try_from(&slice[0..N]).unwrap()
     }
 
     #[inline(always)]
