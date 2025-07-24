@@ -7,9 +7,7 @@ pub trait AsTuple {
 impl<T: Copy> AsTuple for [T; 0] {
     type Tuple = ();
 
-    fn as_tuple(&self) -> Self::Tuple {
-        ()
-    }
+    fn as_tuple(&self) -> Self::Tuple {}
 }
 
 impl<T: Copy> AsTuple for [T; 1] {

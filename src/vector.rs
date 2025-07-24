@@ -15,12 +15,12 @@ impl<T: Copy + Default, const N: usize> Default for ArrayVec<T, N> {
     }
 }
 
-impl<T, const N: usize> Into<[T; N]> for ArrayVec<T, N>
+impl<T, const N: usize> From<ArrayVec<T, N>> for [T; N]
 where
     [T; N]: Clone,
 {
-    fn into(self) -> [T; N] {
-        self.0.clone()
+    fn from(val: ArrayVec<T, N>) -> Self {
+        val.0.clone()
     }
 }
 

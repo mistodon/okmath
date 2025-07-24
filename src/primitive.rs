@@ -17,7 +17,7 @@ pub trait Primitive {
 
 macro_rules! impl_primitive {
     ($type_name: ty) => {
-        #[cfg_attr(feature = "cargo-clippy", allow(cast_lossless))]
+        #[allow(clippy::cast_lossless)]
         impl Primitive for $type_name {
             fn zero() -> Self {
                 0 as $type_name

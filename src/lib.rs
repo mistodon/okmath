@@ -1,4 +1,6 @@
-#![cfg_attr(feature = "cargo-clippy", allow(many_single_char_names))]
+#![allow(clippy::many_single_char_names)]
+#![allow(clippy::needless_range_loop)]
+#![allow(clippy::uninit_assumed_init)]
 
 #[cfg(test)]
 #[macro_use]

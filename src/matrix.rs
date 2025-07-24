@@ -16,12 +16,12 @@ impl<T: Copy + Default, const N: usize> Default for ArrayMat<T, N> {
     }
 }
 
-impl<T, const N: usize> Into<[[T; N]; N]> for ArrayMat<T, N>
+impl<T, const N: usize> From<ArrayMat<T, N>> for [[T; N]; N]
 where
     [[T; N]; N]: Clone,
 {
-    fn into(self) -> [[T; N]; N] {
-        self.0.clone()
+    fn from(val: ArrayMat<T, N>) -> Self {
+        val.0.clone()
     }
 }
 
