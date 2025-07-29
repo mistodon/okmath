@@ -26,6 +26,23 @@ pub fn perspective_projection(aspect: f32, fov: f32, near: f32, far: f32) -> Mat
     ])
 }
 
+pub fn invert_ortho_matrix(matrix: Mat4<f32>) -> Mat4<f32> {
+    let a = matrix.0[0][0];
+    let b = matrix.0[1][1];
+    let c = matrix.0[2][2];
+    let d = matrix.0[3][2];
+    let _d1 = matrix.0[3][3];
+
+    debug_assert!(_d1 == 1.);
+
+    Mat4::from([
+        [1. / a, 0., 0., 0.],
+        [0., 1. / b, 0., 0.],
+        [0., 0., 1. / c, 0.],
+        [0., 0., -d / c, 1.],
+    ])
+}
+
 // TODO: Update for 0-1 depth
 pub fn invert_perspective_matrix(matrix: Mat4<f32>) -> Mat4<f32> {
     let a = matrix.0[0][0];
@@ -136,6 +153,13 @@ mod tests {
         let m = ortho_projection(1.0, 4.0, 0.0, 4.0);
         let p = vec4(4.0, 4.0, 4.0, 1.0);
         assert_eq!(m * p, vec4(1.0, 1.0, 1.0, 1.0));
+    }
+
+    #[test]
+    fn orthographic_matrix_inversion() {
+        let m = ortho_projection(1.0, 4.0, 0.0, 4.0);
+        let m_i = invert_perspective_matrix(m);
+        assert_eq!(m_i * m, Mat4::identity());
     }
 
     // TODO: Wrong for Vulkan depth - see implementation
